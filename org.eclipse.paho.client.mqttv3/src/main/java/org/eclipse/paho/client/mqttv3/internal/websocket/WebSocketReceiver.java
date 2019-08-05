@@ -96,7 +96,7 @@ public class WebSocketReceiver implements Runnable{
 		final String methodName = "run";
 
 		while (running && (input != null)) {
-			
+
 			//try to read the first byte from stream
 			int firstByte = 0x00;
 			try{
@@ -110,11 +110,13 @@ public class WebSocketReceiver implements Runnable{
 				//no data available 
 				continue;
 			} catch (IOException ex) {
+				ex.printStackTrace();
 				// Exception occurred while reading the stream.
 				this.stop();
 			}
 			
 			//we received something ... lets decode the frame ...
+			System.out.println("mqtt received byte: ");
 			
 			try {
 				//@TRACE 852=network read message
@@ -139,10 +141,11 @@ public class WebSocketReceiver implements Runnable{
 				receiving = false;
 
 			} catch (SocketTimeoutException ex){
+				ex.printStackTrace();
 				//could happen in case not the complete frame have been received in time... to be checked how to handle this.				
 				continue;
 			} catch (IOException ex) {
-				
+				ex.printStackTrace();
 				// Exception occurred while reading the stream.
 				this.stop();
 			}

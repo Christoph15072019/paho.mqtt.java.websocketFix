@@ -17,6 +17,7 @@ package org.eclipse.paho.client.mqttv3.internal.websocket;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 
@@ -173,18 +174,24 @@ public class WebSocketFrame {
 				input.read(maskingKey, 0, 4);
 			}
 
-			//wait for all data
-			while(input.available() < payloadLength)
-			{}
-		
+
 			this.payload = new byte[payloadLength];
 			int offsetIndex = 0;
 			int tempLength = payloadLength;
 			int bytesRead = 0;
+			int retry = 2;
 			while (offsetIndex < payloadLength) {
-				bytesRead = input.read(this.payload, offsetIndex, tempLength);
-				offsetIndex += bytesRead;
-				tempLength -= bytesRead;
+				try {
+					bytesRead = input.read(this.payload, offsetIndex, tempLength);
+					offsetIndex += bytesRead;
+					tempLength -= bytesRead;
+				}
+				catch (SocketTimeoutException ex){
+					System.out.println("MQTT - timeout while reading payload: " + retry);
+					if(--retry == 0) {
+						throw ex;
+					}
+				}
 			}
 
 			// Demask if needed
